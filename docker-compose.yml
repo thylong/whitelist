@@ -1,0 +1,17 @@
+version: '3.2'
+services:
+  whitelist:
+    build:
+        context: .
+    depends_on:
+      - dummy
+    links:
+      - dummy
+  tester:
+    build: tests/e2e/tester
+    depends_on:
+      - whitelist
+    links:
+      - whitelist
+  dummy: # Dummy service with 3 routes that we can cache
+    build: tests/e2e/dummy
