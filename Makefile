@@ -6,6 +6,11 @@ build:
 run:
 	go run main.go
 
+.PHONY: lint
+lint:
+	go vet
+	golint
+
 .PHONY: test
 test: test-func test-e2e
 
