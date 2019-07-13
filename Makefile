@@ -11,9 +11,9 @@ test: test-func test-e2e
 
 .PHONY: test-func
 test-func:
-	go test -cover ./...
+	go test -cover -bench=. ./...
 
 .PHONY: test-e2e
 test-e2e:
-	go run main.go &
-	go build -o e2e-tester ./tests/e2e && ./e2e-tester
+	docker-compose run --rm tester
+	docker-compose down --remove-orphans
