@@ -7,13 +7,8 @@ import (
 	"time"
 )
 
-var strategies = []string{"sync", "async", "rate-limited"}
-
 var tr *http.Transport
 var client *http.Client
-
-var doormanEndpoint string
-var delay *time.Duration
 
 func main() {
 	tr = &http.Transport{
@@ -30,7 +25,9 @@ func main() {
 		Path           string
 		ExpectedStatus int
 	}{
+		{Method: "GET", BaseURI: "http://whitelist:8080", Path: "/", ExpectedStatus: 403}, // Denied
 		{Method: "POST", BaseURI: "http://whitelist:8081", Path: "/ip/127.0.0.1", ExpectedStatus: 200},
+		// {Method: "GET", BaseURI: "http://whitelist:8080", Path: "/", ExpectedStatus: 200}, // Allowed
 		{Method: "POST", BaseURI: "http://whitelist:8081", Path: "/ip/127.0.0.1", ExpectedStatus: 500},
 		{Method: "GET", BaseURI: "http://whitelist:8081", Path: "/ip/127.0.0.1", ExpectedStatus: 200},
 		{Method: "DELETE", BaseURI: "http://whitelist:8081", Path: "/ip/127.0.0.1", ExpectedStatus: 200},
