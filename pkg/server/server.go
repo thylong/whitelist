@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 
+	"github.com/thylong/whitelist/pkg/ip"
 	"github.com/thylong/whitelist/pkg/whitelist"
 
 	"github.com/julienschmidt/httprouter"
@@ -69,7 +70,7 @@ func ContainIP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // Filter out not expected requests and forward to the next service
 func Filter(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	ip := findIP(r)
+	ip := ip.FindIP(r)
 	ok := storage.Contain(ip)
 	if !ok {
 		w.WriteHeader(403)

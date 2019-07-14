@@ -1,4 +1,4 @@
-package server
+package ip
 
 import (
 	"net/http"
@@ -88,7 +88,7 @@ func TestRealIP(t *testing.T) {
 
 	// Run test
 	for _, v := range testData {
-		if actual := findIP(v.request); v.expected != actual {
+		if actual := FindIP(v.request); v.expected != actual {
 			t.Errorf("%s: expected %s but get %s", v.name, v.expected, actual)
 		}
 	}

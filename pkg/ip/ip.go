@@ -1,4 +1,4 @@
-package server
+package ip
 
 import (
 	"errors"
@@ -49,7 +49,9 @@ func isPrivateAddress(address string) (bool, error) {
 	return false, nil
 }
 
-func findIP(r *http.Request) string {
+// FindIP takes a HTTP request and extracts the origin IP
+// beware: this is not immune to IP spoofing
+func FindIP(r *http.Request) string {
 	// Fetch header value
 	xRealIP := r.Header.Get("X-Real-Ip")
 	xForwardedFor := r.Header.Get("X-Forwarded-For")
