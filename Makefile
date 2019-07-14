@@ -12,11 +12,15 @@ lint:
 	golint
 
 .PHONY: test
-test: test-func test-e2e
+test: test-func test-e2e test-bench
 
 .PHONY: test-func
 test-func:
-	go test -cover -bench=. ./...
+	go test -cover ./...
+
+.PHONY: test-bench
+test-bench:
+	go test -bench=. -tags=benchmark ./...
 
 .PHONY: test-e2e
 test-e2e:
