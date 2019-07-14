@@ -10,7 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var tree *whitelist.Tree
+var storage whitelist.Storage
 
 var backendHost = "dummy:80"
 
@@ -31,7 +31,7 @@ func InsertIP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	ok := tree.Insert(ps.ByName("ip"))
+	ok := storage.Insert(ps.ByName("ip"))
 	if !ok {
 		w.WriteHeader(500)
 	}
@@ -46,7 +46,7 @@ func DeleteIP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	ok := tree.Delete(ps.ByName("ip"))
+	ok := storage.Delete(ps.ByName("ip"))
 	if !ok {
 		w.WriteHeader(500)
 	}
@@ -61,7 +61,7 @@ func ContainIP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	ok := tree.Contain(ps.ByName("ip"))
+	ok := storage.Contain(ps.ByName("ip"))
 	if !ok {
 		w.WriteHeader(404)
 	}
@@ -70,7 +70,7 @@ func ContainIP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // Filter out not expected requests and forward to the next service
 func Filter(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ip := findIP(r)
-	ok := tree.Contain(ip)
+	ok := storage.Contain(ip)
 	if !ok {
 		w.WriteHeader(403)
 	}
@@ -87,7 +87,7 @@ func Filter(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 // NewServer starts a new HTTP server
-func NewServer() *httprouter.Router {
-	tree = whitelist.New()
+func NewServer(storageKind string) *httprouter.Router {
+	storage = whitelist.New(storageKind)
 	return httprouter.New()
 }

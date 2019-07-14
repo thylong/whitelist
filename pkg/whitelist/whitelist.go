@@ -10,9 +10,27 @@ type Tree struct {
 	content *radix.Tree
 }
 
+// Storage a datastructure usable for storage
+type Storage interface {
+	Insert(string) bool
+	Delete(string) bool
+	Contain(string) bool
+	Len() int
+}
+
 // New create a new radix tree.
-func New() *Tree {
-	return &Tree{content: radix.New()}
+func New(kind string) (storage Storage) {
+	switch kind {
+	case "list":
+		storage = &List{content: []string{}}
+	case "hashmap":
+		storage = &HashMap{content: map[string]bool{}}
+	case "radix":
+		storage = &Tree{content: radix.New()}
+	default:
+		storage = &Tree{content: radix.New()}
+	}
+	return storage
 }
 
 // Insert add an IP to the structure.

@@ -2,10 +2,7 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"math/rand"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -25,7 +22,7 @@ func (th *testHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestHealthz(t *testing.T) {
-	router := NewServer()
+	router := NewServer("radix")
 	router.GET("/healthz", Healthz)
 
 	r, _ := http.NewRequest("GET", "/healthz", nil)
@@ -38,7 +35,7 @@ func TestHealthz(t *testing.T) {
 }
 
 func TestInsertIP(t *testing.T) {
-	router := NewServer()
+	router := NewServer("radix")
 	router.POST("/ip/:ip", InsertIP)
 
 	tr = &http.Transport{
@@ -70,7 +67,7 @@ func TestInsertIP(t *testing.T) {
 }
 
 func TestDeleteIP(t *testing.T) {
-	router := NewServer()
+	router := NewServer("radix")
 	router.DELETE("/ip/:ip", DeleteIP)
 	router.POST("/ip/:ip", InsertIP)
 
@@ -108,7 +105,7 @@ func TestDeleteIP(t *testing.T) {
 }
 
 func TestContainIP(t *testing.T) {
-	router := NewServer()
+	router := NewServer("radix")
 	router.GET("/ip/:ip", ContainIP)
 	router.POST("/ip/:ip", InsertIP)
 
@@ -138,7 +135,7 @@ func TestContainIP(t *testing.T) {
 }
 
 func TestFilter(t *testing.T) {
-	router := NewServer()
+	router := NewServer("radix")
 	router.GET("/", Filter)
 	router.POST("/ip/:ip", InsertIP)
 
@@ -181,129 +178,6 @@ func TestFilter(t *testing.T) {
 
 		if w.Code != tc.ExpectedStatus {
 			t.FailNow()
-		}
-	}
-}
-
-func startDummyServer() {
-	if httpServer != nil {
-		return
-	}
-
-	httpServer = &http.Server{
-		Handler: &testHandler{},
-	}
-
-	listener, err := net.Listen("tcp", ":8083")
-	if err != nil {
-		panic(err)
-	}
-
-	go func() {
-		err := httpServer.Serve(listener)
-		if err != nil {
-			panic(err)
-		}
-	}()
-}
-
-func BenchmarkFilterSingleIPWhitelist(b *testing.B) {
-	startDummyServer()
-
-	backendHost = "localhost:8083"
-	defer func() { backendHost = "dummy:8080" }()
-
-	router := NewServer()
-	router.GET("/", Filter)
-	router.POST("/ip/:ip", InsertIP)
-
-	// Seed the trie to prepare deletion tests
-	rInsert, _ := http.NewRequest("POST", "/ip/203.0.113.195", nil)
-	wInsert := httptest.NewRecorder()
-	router.ServeHTTP(wInsert, rInsert)
-
-	r, _ := http.NewRequest("GET", "http://localhost:8083/", nil)
-	r.Header.Add("X-Forwarded-For", "203.0.113.195")
-
-	client := &http.Client{}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		res, err := client.Do(r)
-		if err != nil {
-			b.Fatalf("error: %s\n", err)
-		}
-
-		if res.StatusCode != 200 {
-			b.Fatalf("wrong status code: %d\n", res.StatusCode)
-		}
-
-		_, err = ioutil.ReadAll(res.Body)
-		if err != nil {
-			b.Fatalf("error: %s\n", err)
-		}
-
-		err = res.Body.Close()
-		if err != nil {
-			b.Fatalf("error: %s\n", err)
-		}
-	}
-}
-
-func BenchmarkFilterLargeIPWhitelist(b *testing.B) {
-	startDummyServer()
-
-	backendHost = "localhost:8083"
-	defer func() { backendHost = "dummy:8080" }()
-
-	router := NewServer()
-	router.GET("/", Filter)
-	router.POST("/ip/:ip", InsertIP)
-
-	go http.ListenAndServe(":8080", router)
-
-	// Seed the trie to prepare for large search accross the structure
-	for i := 0; i < 100000; i++ {
-		space1 := rand.Intn(255)
-		space2 := rand.Intn(255)
-		space3 := rand.Intn(255)
-		space4 := rand.Intn(255)
-
-		ip := fmt.Sprintf("%d%d%d%d", space1, space2, space3, space4)
-
-		rInsert, _ := http.NewRequest("POST", fmt.Sprintf("/ip/%s", ip), nil)
-		wInsert := httptest.NewRecorder()
-		router.ServeHTTP(wInsert, rInsert)
-	}
-
-	// Whitelist IP for the test (to not go through 403)
-	r, _ := http.NewRequest("GET", "http://localhost:8080/", nil)
-	rInsert, _ := http.NewRequest("POST", "/ip/203.0.113.195", nil)
-	wInsert := httptest.NewRecorder()
-	router.ServeHTTP(wInsert, rInsert)
-	r.Header.Add("X-Forwarded-For", "203.0.113.195")
-
-	client := &http.Client{}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		res, err := client.Do(r)
-		if err != nil {
-			b.Fatalf("error: %s\n", err)
-		}
-
-		if res.StatusCode != 200 {
-			b.Fatalf("StatusCode: %d\n", res.StatusCode)
-		}
-
-		_, err = ioutil.ReadAll(res.Body)
-		if err != nil {
-			b.Fatalf("error: %s\n", err)
-		}
-
-		err = res.Body.Close()
-		if err != nil {
-			b.Fatalf("error: %s\n", err)
 		}
 	}
 }

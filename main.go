@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	router := server.NewServer()
+	router := server.NewServer("radix")
 	router.PanicHandler = server.PanicHandler
 
 	// Interact with whitelist content

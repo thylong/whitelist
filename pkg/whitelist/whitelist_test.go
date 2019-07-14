@@ -8,7 +8,7 @@ func TestInsert(t *testing.T) {
 	t.Parallel()
 
 	ip := "127.0.0.1"
-	tree := New()
+	tree := New("radix")
 
 	ok := tree.Insert(ip)
 	if !ok {
@@ -24,7 +24,7 @@ func TestDelete(t *testing.T) {
 	t.Parallel()
 
 	ip := "127.0.0.1"
-	tree := New()
+	tree := New("radix")
 
 	tree.Insert(ip)
 
@@ -42,7 +42,7 @@ func TestContain(t *testing.T) {
 	t.Parallel()
 
 	ip := "127.0.0.1"
-	tree := New()
+	tree := New("radix")
 
 	if tree.Contain(ip) {
 		t.Errorf("TestContain retrieved not inserted IP %s:\n", ip)
@@ -60,7 +60,7 @@ func TestLen(t *testing.T) {
 
 	ip1 := "127.0.0.1"
 	ip2 := "127.0.0.2"
-	tree := New()
+	tree := New("radix")
 
 	tree.Insert(ip1)
 
@@ -76,15 +76,5 @@ func TestLen(t *testing.T) {
 	tree.Insert(ip2)
 	if tree.Len() != 2 {
 		t.Errorf("TestLen returned wrong length (%d instead of 2)\n", tree.Len())
-	}
-}
-
-func BenchmarkInsert(b *testing.B) {
-	ip := "127.0.0.1"
-	tree := New()
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		tree.Insert(ip)
 	}
 }
